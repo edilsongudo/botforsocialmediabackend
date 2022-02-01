@@ -21,6 +21,7 @@ class Bot():
         self.max_likes_per_user = int(
             config['preferences']['max_likes_per_user'])
         self.session = requests.Session()
+        self.print = pprint.pprint
 
     def generate_fake_user(self):
         username = generate_username(1)[0]
@@ -61,35 +62,39 @@ class Bot():
                                      )
             print('Creating Post', response.status_code)
 
-    def list_posts_excluding_author(self, user_id):
-        url = f"{self.base_url}/posts/"
+    def get_users_without_a_post_liked(self, user_id):
+        user_who_have_a_post_without_like = []
+        url = f"{self.base_url}/accounts/users/"
         response = requests.get(url).json()
-
-        new_response = []
-        for post in response:
-            if post['author'] != user_id:
-                new_response.append(post)
-
-        return new_response
+        for user in response:
+            if user['id'] != user_id:
+                posts = user['post_set']
+                for post in posts:
+                    if len(post['likes']) == 0:
+                        user_who_have_a_post_without_like.append(user)
+        return user_who_have_a_post_without_like
 
     def like_posts(self, token, user_id):
 
-        posts = self.list_posts_excluding_author(user_id)
+        users = self.get_users_without_a_post_liked(user_id)
         posts_ids = []
-        for post in posts:
-            posts_ids.append(post['id'])
+        for user in users:
+            for post in user['post_set']:
+                if len(post['likes']) == 0:
+                    posts_ids.append(post['id'])
 
-        ammount = random.randint(0, self.max_likes_per_user)
-        for i in range(ammount):
-            post_to_like = random.choice(posts_ids)
-            url = f"{self.base_url}/posts/like-dislike/{post_to_like}/"
-            headers = {
-                'Authorization': f"Token {token}",
-            }
-            response = self.session.get(url,
-                                        headers=headers
-                                        )
-            print('Liking Post', response.status_code)
+        limit = 0
+        for i in posts_ids:
+            if limit < self.max_likes_per_user:
+                url = f"{self.base_url}/posts/like-dislike/{i}/"
+                headers = {
+                    'Authorization': f"Token {token}",
+                }
+                response = self.session.get(url,
+                                            headers=headers
+                                            )
+                print('Liking Post', response.status_code)
+                limit += 1
 
     def register_users(self):
         register_url = f"{self.base_url}/accounts/register/"
@@ -112,3 +117,4 @@ class Bot():
 
 bot = Bot()
 bot.register_users()
+# bot.list_users(1)
