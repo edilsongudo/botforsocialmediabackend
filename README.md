@@ -1,5 +1,6 @@
 # Social Media Bot
 A bot that register users and creates random posts based on user preferences
+<img src="screenshots/print.png">
 
 ### Installation and Usage
 
@@ -23,6 +24,6 @@ Make sure you create a bot object from Bot class and call the register_users fun
 Example:
 
 ```
-    bot = Bot()
-    bot.register_users()
+bot = Bot()
+bot.register_users()
 ```
