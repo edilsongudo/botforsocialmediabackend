@@ -10,7 +10,7 @@ import pprint
 class Bot():
     def __init__(self,
                  config_file_path='config.ini',
-                 base_url='http://127.0.0.1:8000'
+                 base_url='http://127.0.0.1:8000/api/v1'
                  ):
         config = ConfigParser()
         config.read(config_file_path)
@@ -48,7 +48,7 @@ class Bot():
         print('JSON Written')
 
     def create_posts(self, token):
-        url = f"{self.base_url}/post-create/"
+        url = f"{self.base_url}/posts/"
         headers = {
             'Authorization': f"Token {token}",
         }
@@ -59,10 +59,10 @@ class Bot():
                                      data=data,
                                      headers=headers
                                      )
-            print(response.json())
+            print('Creating Post', response.status_code)
 
     def list_posts_excluding_author(self, user_id):
-        url = f"{self.base_url}/post-list/"
+        url = f"{self.base_url}/posts/"
         response = requests.get(url).json()
 
         new_response = []
@@ -82,14 +82,14 @@ class Bot():
         ammount = random.randint(0, self.max_likes_per_user)
         for i in range(ammount):
             post_to_like = random.choice(posts_ids)
-            url = f"{self.base_url}/post-like-or-dislike/{i}/"
+            url = f"{self.base_url}/posts/like-dislike/{post_to_like}/"
             headers = {
                 'Authorization': f"Token {token}",
             }
             response = self.session.get(url,
                                         headers=headers
                                         )
-            print(response.text)
+            print('Liking Post', response.status_code)
 
     def register_users(self):
         register_url = f"{self.base_url}/accounts/register/"
@@ -98,11 +98,11 @@ class Bot():
         for i in range(self.number_of_users):
             payload = self.generate_fake_user()
             response = self.session.post(register_url, data=payload)
+            print('Creating User', response.status_code)
             user_id = response.json()['user']['id']
             token = response.json()['token']
             self.create_posts(token)  # Creates random posts with this user
             self.like_posts(token, user_id)  # Likes random posts
-            print('User Registered')
             payload['token'] = token
             payload['id'] = user_id
             users.append(payload)
